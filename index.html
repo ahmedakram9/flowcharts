@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flowcharts</title>
+<style>
+:root{--sky:#DDEEFF;--ink:#1B2A49;--muted:#51628A;--line:#BCD3EE;--true:#11904A;--true-bg:#DCF4E5;--false:#C92A3B;--false-bg:#FDE2E5;--amber:#F2A007;
+  --term:#E6DBFA;--proc:#DCEBFF;--io:#D8F2E2;--dec:#FFE7C2;
+  --display:"Trebuchet MS","Segoe UI",system-ui,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--sky);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;line-height:1.5}
+[hidden]{display:none!important}
+.screen{display:none;min-height:100%;max-width:1020px;margin:0 auto;padding:1.5rem 1rem 2.5rem}
+.screen.show{display:block}
+h1{font-family:var(--display);font-size:clamp(2.2rem,6vw,3.4rem);margin:0;line-height:1.1}
+h2{font-family:var(--display);font-size:clamp(1.4rem,3.6vw,1.9rem);margin:0}
+.btn{border:0;border-radius:14px;padding:.75rem 1.4rem;font-weight:700;font-size:1.1rem;cursor:pointer;background:var(--ink);color:#fff;font-family:inherit}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.light{background:#fff;color:var(--ink);border:2px solid var(--ink)}
+.btn.go{background:var(--true)}.btn.no{background:var(--false)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
+.top{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap}
+.top h2{margin-right:auto}
+.card{background:#fff;border:2px solid var(--line);border-radius:20px;padding:1.5rem}
+
+#home{display:none;text-align:center;padding-top:6vh}
+#home.show{display:block}
+.def{font-size:1.25rem;max-width:38ch;margin:1rem auto 2rem;color:var(--muted)}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.25rem;max-width:820px;margin:0 auto}
+.choice{background:#fff;border:3px solid var(--ink);border-radius:20px;padding:1.6rem 1rem;cursor:pointer;font-family:inherit;color:var(--ink)}
+.choice:hover{background:#FFF7E0}
+.choice b{display:block;font-family:var(--display);font-size:1.6rem}
+.choice span{color:var(--muted)}
+.choice svg{width:64px;height:64px;margin-bottom:.5rem}
+
+.chips{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem}
+.chip{border:2px solid var(--ink);background:#fff;border-radius:999px;padding:.45rem 1.1rem;font-weight:700;font-size:1.02rem;cursor:pointer;font-family:inherit;color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink);color:#fff}
+.chip:disabled{opacity:.45;cursor:default}
+.scene{border-radius:16px;overflow:hidden;border:2px solid var(--line);background:#fff}
+.scene svg{display:block;width:100%;height:auto}
+.caption{font-family:var(--display);font-size:clamp(1.15rem,3vw,1.5rem);font-weight:700;text-align:center;min-height:2.8em;margin:1rem 0 .5rem}
+.caption.t{color:var(--true)}.caption.f{color:var(--false)}
+.controls{display:flex;justify-content:center;align-items:center;gap:.75rem;flex-wrap:wrap}
+.pwbox{font-size:1.3rem;font-family:Consolas,Menlo,monospace;border:3px solid var(--ink);border-radius:12px;padding:.4rem .7rem;width:12rem;color:var(--ink)}
+.legend{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.6rem;margin-top:1.1rem}
+@media(max-width:760px){.legend{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.lg{background:#fff;border:2px solid var(--line);border-radius:14px;padding:.5rem;text-align:center;transition:background .3s,border-color .3s,transform .3s}
+.lg svg{width:84px;height:42px;display:block;margin:0 auto .2rem}
+.lg b{display:block;font-size:.98rem}
+.lg span{font-size:.85rem;color:var(--muted);line-height:1.3;display:block}
+.lg.on{background:#FFF0C7;border-color:var(--amber);transform:translateY(-3px)}
+.fshape{transition:fill .3s,stroke .3s,stroke-width .3s}
+
+/* build it */
+.build{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:1rem;align-items:start}
+@media(max-width:760px){.build{grid-template-columns:1fr}}
+.build .scene svg{max-height:70vh}
+.cards{display:flex;flex-direction:column;gap:.55rem}
+.task{border:2px solid var(--ink);border-radius:12px;padding:.6rem .9rem;font-size:1.05rem;font-weight:700;cursor:pointer;font-family:inherit;color:var(--ink);text-align:left;background:#fff;box-shadow:0 3px 0 var(--ink)}
+.task[aria-pressed="true"]{background:var(--amber);transform:translateY(-2px);box-shadow:0 5px 0 var(--ink)}
+.bfb{border-radius:12px;padding:.8rem 1rem;font-size:1.05rem;margin-top:.75rem;min-height:3rem}
+.bfb.t{background:var(--true-bg)}.bfb.f{background:var(--false-bg)}.bfb.n{background:#FFF0C7}
+.slot{cursor:pointer}
+
+/* quiz */
+.progress{height:12px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:1rem}
+.progress i{display:block;height:100%;background:var(--amber);transition:width .3s}
+.q{font-size:1.35rem;font-weight:700;margin:.25rem 0 1rem}
+.opts{display:grid;gap:.6rem}
+.qflow{border:2px solid var(--line);border-radius:14px;overflow:hidden;max-width:400px;margin:0 auto 1rem}
+.qflow svg{display:block;width:100%;height:auto}
+.opts.shapes{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:600px){.opts.shapes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.opt{text-align:left;border:2px solid var(--line);background:#fff;border-radius:12px;padding:.85rem 1rem;font-size:1.12rem;cursor:pointer;font-family:inherit;color:var(--ink)}
+.opts.shapes .opt{text-align:center}
+.opt svg{width:110px;height:56px}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt.t{border-color:var(--true);background:var(--true-bg)}.opt.f{border-color:var(--false);background:var(--false-bg)}
+.opt:disabled{cursor:default}
+.fb{margin-top:1rem;border-radius:12px;padding:.85rem 1rem;font-size:1.1rem;display:none}
+.fb.t{display:block;background:var(--true-bg)}.fb.f{display:block;background:var(--false-bg)}
+.end{text-align:center;padding:1rem 0}.end .big{font-family:var(--display);font-size:4.5rem;font-weight:700;margin:.25rem 0;line-height:1}
+
+#watch.show:fullscreen{max-width:none;width:100%;height:100%;margin:0;padding:1rem 1.5rem;background:var(--sky);overflow:auto;display:flex;flex-direction:column}
+#watch:fullscreen .scene{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:transparent;border:0}
+#watch:fullscreen .scene svg{width:auto;height:auto;max-width:100%;max-height:100%;border-radius:16px;border:2px solid var(--line);background:#fff}
+#watch:fullscreen .legend{display:none}
+#jsWarn{background:#FDE2E5;border:3px solid #C92A3B;color:#1B2A49;border-radius:14px;padding:1rem 1.25rem;margin:1rem auto;max-width:760px;font-size:1.1rem}
+</style>
+</head>
+<body>
+<div id="jsWarn"><b>The interactive part of this page isn't running.</b> This usually means the file is being shown as a preview (for example in email, Teams, OneDrive or Google Drive) or in an old browser. Download the file, then open it in Google Chrome or Microsoft Edge.</div>
+
+<!-- ================= HOME ================= -->
+<section id="home" class="show">
+  <h1>Flowcharts</h1>
+  <p class="def">A flowchart is a diagram that shows the steps of an algorithm, using shapes joined by arrows</p>
+  <div class="choices">
+    <button class="choice" data-go="watch">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29" fill="#F2A007" stroke="#1B2A49" stroke-width="3"/><path d="M26 20 L46 32 L26 44Z" fill="#1B2A49"/></svg>
+      <b>Watch</b><span>Follow flowcharts in action</span>
+    </button>
+    <button class="choice" data-go="build">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29" fill="#1C6FD1" stroke="#1B2A49" stroke-width="3"/><rect x="22" y="12" width="20" height="10" rx="5" fill="#fff"/><rect x="22" y="27" width="20" height="10" fill="#fff"/><path d="M32 41 L42 47 L32 53 L22 47Z" fill="#FFE08A"/></svg>
+      <b>Build it</b><span>Complete the flowcharts</span>
+    </button>
+    <button class="choice" data-go="quiz">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29" fill="#11904A" stroke="#1B2A49" stroke-width="3"/><path d="M19 33 L28 42 L46 23" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <b>Quiz</b><span>Test what you know</span>
+    </button>
+  </div>
+</section>
+
+<!-- ================= WATCH ================= -->
+<section id="watch" class="screen">
+  <div class="top">
+    <button class="btn light" data-go="home">Back</button>
+    <h2 id="wTitle">Make a cup of tea</h2>
+    <button class="btn light" id="fsBtn">Full screen</button>
+    <button class="btn" data-go="build">Next: Build it</button>
+  </div>
+  <div class="chips" role="group" aria-label="Choose an example">
+    <button class="chip ex" data-ex="tea" aria-pressed="true">1. Make a cup of tea</button>
+    <button class="chip ex" data-ex="road" aria-pressed="false">2. Cross the road</button>
+    <button class="chip ex" data-ex="login" aria-pressed="false">3. Log in</button>
+  </div>
+
+  <div class="scene">
+    <!-- ===== TEA ===== -->
+    <svg id="sTea" viewBox="0 0 820 440" role="img" aria-label="Flowchart for making a cup of tea, with a kitchen where each step happens">
+      <defs><marker id="mT" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#1B2A49"/></marker></defs>
+      <rect width="820" height="440" fill="#fff"/>
+      <rect x="410" y="0" width="410" height="440" fill="#FFF3DC"/>
+      <line x1="410" y1="0" x2="410" y2="440" stroke="#BCD3EE" stroke-width="3"/>
+      <rect x="640" y="60" width="120" height="90" rx="6" fill="#BFE3FF" stroke="#1B2A49" stroke-width="3"/><line x1="700" y1="60" x2="700" y2="150" stroke="#1B2A49" stroke-width="3"/>
+      <!-- person behind counter -->
+      <g transform="translate(470,318)">
+        <rect x="-18" y="-62" width="36" height="62" rx="10" fill="#C2387A" stroke="#1B2A49" stroke-width="2.5"/>
+        <circle cx="0" cy="-78" r="15" fill="#F5C9A0" stroke="#1B2A49" stroke-width="2.5"/><path d="M-15 -82 Q0 -100 15 -82" fill="#5A3D1E"/>
+        <circle cx="-5" cy="-78" r="1.8" fill="#1B2A49"/><circle cx="5" cy="-78" r="1.8" fill="#1B2A49"/><path id="tMouth" d="M-5 -71 Q0 -67 5 -71" fill="none" stroke="#1B2A49" stroke-width="2"/>
+      </g>
+      <rect x="410" y="300" width="410" height="140" fill="#B07A45"/><rect x="410" y="296" width="410" height="12" fill="#D8B48A" stroke="#1B2A49" stroke-width="2"/>
+      <!-- sugar bowl -->
+      <g><path d="M730 272 H790 Q788 300 760 302 Q732 300 730 272Z" fill="#fff" stroke="#1B2A49" stroke-width="2.5"/><g fill="#fff" stroke="#8A97B5" stroke-width="1.2"><rect x="742" y="264" width="9" height="9"/><rect x="754" y="262" width="9" height="9"/><rect x="766" y="265" width="9" height="9"/></g>
+        <text x="760" y="320" text-anchor="middle" font-family="Trebuchet MS,sans-serif" font-weight="700" font-size="11" fill="#fff">SUGAR</text></g>
+      <!-- cup -->
+      <g id="tCup">
+        <path d="M640 250 H690 L686 296 H644Z" fill="#fff" stroke="#1B2A49" stroke-width="2.5"/>
+        <clipPath id="cupClip"><path d="M641 251 H689 L685 295 H645Z"/></clipPath>
+        <rect id="tTea" x="640" y="296" width="50" height="0" fill="#8A5A2B" clip-path="url(#cupClip)"/>
+        <path d="M690 260 Q706 262 704 276 Q702 288 688 286" fill="none" stroke="#1B2A49" stroke-width="3"/>
+      </g>
+      <g id="tBag" opacity="0"><line x1="0" y1="-20" x2="0" y2="0" stroke="#1B2A49" stroke-width="1.5"/><rect x="-7" y="-28" width="14" height="10" fill="#F2A007" stroke="#1B2A49" stroke-width="1.5"/><rect x="-9" y="0" width="18" height="14" rx="2" fill="#E3D2B0" stroke="#1B2A49" stroke-width="1.5"/></g>
+      <g id="tCubes"></g>
+      <g id="tSpoon" opacity="0"><line x1="0" y1="0" x2="0" y2="-46" stroke="#8A97B5" stroke-width="4" stroke-linecap="round"/><ellipse cx="0" cy="2" rx="6" ry="4" fill="#8A97B5"/></g>
+      <!-- kettle -->
+      <g id="tKettle" transform="translate(560,296)">
+        <path d="M-34 0 H34 V-44 Q34 -64 0 -64 Q-34 -64 -34 -44Z" fill="#D8DEEA" stroke="#1B2A49" stroke-width="2.5"/>
+        <path d="M34 -40 L54 -54 L50 -30 L34 -22Z" fill="#D8DEEA" stroke="#1B2A49" stroke-width="2.5"/>
+        <path d="M-20 -64 Q0 -84 20 -64" fill="none" stroke="#1B2A49" stroke-width="4"/>
+        <circle id="tLight" cx="-18" cy="-14" r="5" fill="#5A6B8C" stroke="#1B2A49" stroke-width="1.5"/>
+      </g>
+      <path id="tStream" d="M612 214 Q 640 230 664 262" fill="none" stroke="#8A5A2B" stroke-width="5" opacity="0"/>
+      <g id="tSteam"></g>
+      <g id="tBub" opacity="0" style="transition:opacity .25s">
+        <rect x="430" y="18" width="370" height="54" rx="10" fill="#fff" stroke="#1B2A49" stroke-width="2.5"/>
+        <text id="tWho" x="446" y="39" font-family="Trebuchet MS,sans-serif" font-weight="700" font-size="12" fill="#6C4AB6"></text>
+        <text id="tSay" x="446" y="60" font-family="Trebuchet MS,sans-serif" font-weight="700" font-size="16" fill="#1B2A49"></text>
+      </g>
+      <g id="fTea"></g>
+    </svg>
+
+    <!-- ===== ROAD ===== -->
+    <svg id="sRoad" viewBox="0 0 820 440" role="img" aria-label="Flowchart for crossing the road at a pedestrian crossing with traffic lights" hidden>
+      <defs><marker id="mR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#1B2A49"/></marker></defs>
+      <rect width="820" height="440" fill="#fff"/>
+      <rect x="410" y="0" width="410" height="250" fill="#BFE3FF"/>
+      <g fill="#B9C4D8" stroke="#1B2A49" stroke-width="2"><rect x="430" y="120" width="70" height="130"/><rect x="520" y="80" width="90" height="170"/><rect x="640" y="140" width="60" height="110"/><rect x="720" y="100" width="80" height="150"/></g>
+      <g fill="#7FD3FF"><rect x="442" y="134" width="16" height="16"/><rect x="472" y="134" width="16" height="16"/><rect x="536" y="96" width="18" height="18"/><rect x="576" y="96" width="18" height="18"/><rect x="536" y="136" width="18" height="18"/><rect x="576" y="136" width="18" height="18"/><rect x="736" y="116" width="18" height="18"/><rect x="768" y="116" width="18" height="18"/></g>
+      <rect x="410" y="250" width="410" height="36" fill="#C9D3E3"/>
+      <rect x="410" y="286" width="410" height="104" fill="#3C4A6B"/>
+      <path d="M410 338 H820" stroke="#fff" stroke-width="3" stroke-dasharray="20 14"/>
+      <!-- signal-controlled crossing: studs and zig-zags, no zebra stripes -->
+      <g stroke="#fff" stroke-width="3" stroke-dasharray="5 6"><line x1="612" y1="290" x2="612" y2="388"/><line x1="672" y1="290" x2="672" y2="388"/></g>
+      <g fill="none" stroke="#fff" stroke-width="2.5"><path d="M440 296 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8"/><path d="M684 296 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8"/>
+        <path d="M440 382 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8"/><path d="M684 382 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8"/></g>
+      <!-- traffic light for cars -->
+      <rect x="704" y="330" width="8" height="102" fill="#1B2A49"/>
+      <rect x="694" y="272" width="28" height="64" rx="6" fill="#13162A" stroke="#1B2A49" stroke-width="2"/>
+      <circle id="carR" cx="708" cy="285" r="7" fill="#4A2228"/><circle id="carA" cx="708" cy="304" r="7" fill="#4A3B1E"/><circle id="carG" cx="708" cy="323" r="7" fill="#2BD46B"/>
+      <rect x="410" y="390" width="410" height="50" fill="#C9D3E3"/>
+      <g id="cars"></g>
+      <!-- signal pole -->
+      <rect x="586" y="320" width="8" height="112" fill="#1B2A49"/>
+      <rect x="572" y="290" width="36" height="44" rx="5" fill="#13162A" stroke="#1B2A49" stroke-width="2"/>
+      <g id="redMan"><circle cx="590" cy="300" r="3.5" fill="#FF4B4B"/><path d="M586 305 H594 V318 H586Z M587 318 V326 M593 318 V326" fill="#FF4B4B" stroke="#FF4B4B" stroke-width="2.5"/></g>
+      <g id="greenMan" opacity="0"><circle cx="591" cy="300" r="3.5" fill="#2BD46B"/><path d="M589 305 L593 305 L594 316 L598 326 M590 316 L585 326 M588 308 L583 314 M594 308 L598 313" fill="none" stroke="#2BD46B" stroke-width="2.6" stroke-linecap="round"/></g>
+      <rect x="578" y="372" width="24" height="22" rx="4" fill="#F2C230" stroke="#1B2A49" stroke-width="2"/>
+      <text id="waitLight" x="590" y="387" text-anchor="middle" font-family="Trebuchet MS,sans-serif" font-weight="700" font-size="7" fill="#1B2A49">PUSH</text>
+      <g id="walker"></g>
+      <g id="rBub" opacity="0" style="transition:opacity .25s">
+        <rect x="430" y="18" width="370" height="54" rx="10" fill="#fff" stroke="#1B2A49" stroke-width="2.5"/>
+        <text id="rWho" x="446" y="39" font-family="Trebuchet MS,sans-serif" font-weight="700" font-size="12" fill="#6C4AB6"></text>
+        <text id="rSay" x="446" y="60" font-family="Trebuchet MS,sans-serif" font-weight="700" font-size="16" fill="#1B2A49"></text>
+      </g>
+      <g id="fRoad"></g>
+    </svg>
+
+    <!-- ===== LOGIN ===== -->
+    <svg id="sLogin" viewBox="0 0 820 440" role="img" aria-label="Flowchart for logging in with a password, with a laptop screen" hidden>
+      <defs><marker id="mL" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#1B2A49"/></marker></defs>
+      <rect width="820" height="440" fill="#fff"/>
+      <rect x="410" y="0" width="410" height="440" fill="#E8EEF7"/>
+      <rect x="410" y="330" width="410" height="110" fill="#B07A45"/>
+      <rect x="470" y="70" width="300" height="208" rx="12" fill="#1B2A49"/>
+      <rect id="lScreen" x="484" y="84" width="272" height="180" rx="4" fill="#F4F8FD" class="fshape"/>
+      <text x="620" y="118" text-anchor="middle" font-family="Trebuchet MS,sans-serif" font-weight="700" font-size="20" fill="#1B2A49">Log in</text>
+      <text x="504" y="150" font-family="Trebuchet MS,sans-serif" font-weight="700" font-size="13" fill="#51628A">Password:</text>
+      <rect x="504" y="158" width="232" height="32" rx="6" fill="#fff" stroke="#1B2A49" stroke-width="2"/>
+      <text id="lPw" x="514" y="181" font-family="Consolas,Menlo,monospace" font-weight="700" font-size="18" fill="#1B2A49"></text>
+      <text id="lMsg" x="620" y="222" text-anchor="middle" font-family="Trebuchet MS,sans-serif" font-weight="700" font-size="16" fill="#1B2A49"></text>
+      <text id="lTries" x="620" y="250" text-anchor="middle" font-family="Trebuchet MS,sans-serif" font-size="12" fill="#51628A">Attempts: 0</text>
+      <path d="M440 278 H800 L820 300 H420Z" fill="#8A97B5" stroke="#1B2A49" stroke-width="2.5"/>
+      <g transform="translate(700,320) rotate(5)"><rect x="-56" y="-26" width="112" height="56" fill="#FFF27A" stroke="#C9A800" stroke-width="1.5"/>
+        <text x="0" y="-8" text-anchor="middle" font-family="Trebuchet MS,sans-serif" font-weight="700" font-size="11" fill="#1B2A49">Psst! Password:</text>
+        <text x="0" y="9" text-anchor="middle" font-family="Consolas,Menlo,monospace" font-weight="700" font-size="14" fill="#1B2A49">dragon42</text>
+        <text x="0" y="23" text-anchor="middle" font-family="Trebuchet MS,sans-serif" font-size="8" fill="#51628A">(never do this in real life!)</text></g>
+      <g id="fLogin"></g>
+    </svg>
+  </div>
+
+  <p class="caption" id="caption" aria-live="polite"></p>
+  <div class="controls" id="cTea"><button class="btn" id="goTea">Start</button><button class="btn go" id="yesTea" hidden>Yes, please</button><button class="btn no" id="noTea" hidden>No, thanks</button></div>
+  <div class="controls" id="cRoad" hidden><button class="btn" id="goRoad">Start</button></div>
+  <div class="controls" id="cLogin" hidden><button class="btn" id="goLogin">Start</button><input class="pwbox" id="pwIn" type="text" autocomplete="off" placeholder="Type a password" aria-label="Type a password" hidden><button class="btn go" id="enterLogin" hidden>Enter</button></div>
+
+  <div class="controls" id="modeRow" style="margin-top:.75rem">
+    <span style="font-weight:700">How to play:</span>
+    <button class="chip mode" data-mode="step" aria-pressed="true">One step at a time</button>
+    <button class="chip mode" data-mode="auto" aria-pressed="false">Play it all</button>
+    <button class="btn go" id="nextStep" hidden>Next step ▶</button>
+  </div>
+  <div class="legend" id="legend"></div>
+</section>
+
+<!-- ================= BUILD IT ================= -->
+<section id="build" class="screen">
+  <div class="top">
+    <button class="btn light" data-go="home">Back</button>
+    <h2>Build it: complete the flowchart</h2>
+    <button class="btn" data-go="quiz">Next: Quiz</button>
+  </div>
+  <div class="chips" id="bChips" role="group" aria-label="Choose a flowchart"></div>
+  <div class="build">
+    <div class="scene"><svg id="sBuild" viewBox="0 0 420 440" role="img" aria-label="A flowchart with empty shapes to fill in">
+      <defs><marker id="mB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#1B2A49"/></marker></defs>
+      <rect width="420" height="440" fill="#fff"/><g id="fBuild"></g>
+    </svg></div>
+    <div>
+      <p style="margin:0 0 .6rem;font-weight:700">Click a step, then click the shape it belongs in. Think about the <b>shape</b> and the <b>order</b>.</p>
+      <div class="cards" id="bCards"></div>
+      <div class="bfb n" id="bFb" aria-live="polite"></div>
+      <div class="controls" style="justify-content:flex-start;margin-top:.75rem"><button class="btn go" id="bRun" hidden>Run it!</button><button class="btn light" id="bReset">Start again</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= QUIZ ================= -->
+<section id="quiz" class="screen">
+  <div class="top">
+    <button class="btn light" data-go="home">Back</button>
+    <h2>Quiz</h2>
+    <button class="btn light" data-go="watch">Watch again</button>
+  </div>
+  <div class="card" id="quizBody"></div>
+</section>
+
+<script>
+const $=s=>document.querySelector(s);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function frames(dur,fn){return new Promise(res=>{let t0=null;function f(t){if(t0===null)t0=t;const k=Math.min(1,(t-t0)/dur);fn(k);if(k<1)requestAnimationFrame(f);else res()}requestAnimationFrame(f)})}
+const ease=k=>(1-Math.cos(k*Math.PI))/2;
+function caption(html,c){const e=$("#caption");e.innerHTML=html;e.className="caption "+(c||"")}
+
+/* screens + full screen */
+function go(id){if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen();document.querySelectorAll("#home,.screen").forEach(s=>s.classList.toggle("show",s.id===id));window.scrollTo(0,0)}
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
+const fsBtn=$("#fsBtn");
+if(!(document.fullscreenEnabled||document.webkitFullscreenEnabled))fsBtn.hidden=true;
+fsBtn.onclick=()=>{if(document.fullscreenElement||document.webkitFullscreenElement){(document.exitFullscreen||document.webkitExitFullscreen).call(document);return}
+  const a=$("#watch"),req=a.requestFullscreen||a.webkitRequestFullscreen;try{const r=req.call(a);if(r&&r.catch)r.catch(()=>{})}catch(e){}};
+document.addEventListener("fullscreenchange",()=>{fsBtn.textContent=document.fullscreenElement?"Exit full screen":"Full screen"});
+
+/* ================= FLOWCHART DRAWING ================= */
+const FILL={term:"#E6DBFA",proc:"#DCEBFF",io:"#D8F2E2",dec:"#FFE7C2"};
+const TYPE_NAME={term:"Start / End",proc:"Process",io:"Input / Output",dec:"Decision"};
+function shapeEl(parent,n,fill){
+  const{x,y,w,h}=n;let s;
+  if(n.type==="term")s=el("rect",{x:x-w/2,y:y-h/2,width:w,height:h,rx:h/2},parent);
+  else if(n.type==="proc")s=el("rect",{x:x-w/2,y:y-h/2,width:w,height:h,rx:3},parent);
+  else if(n.type==="io"){const k=12;s=el("polygon",{points:`${x-w/2+k},${y-h/2} ${x+w/2},${y-h/2} ${x+w/2-k},${y+h/2} ${x-w/2},${y+h/2}`},parent)}
+  else s=el("polygon",{points:`${x},${y-h/2} ${x+w/2},${y} ${x},${y+h/2} ${x-w/2},${y}`},parent);
+  s.setAttribute("fill",fill);s.setAttribute("stroke","#1B2A49");s.setAttribute("stroke-width",2.5);s.setAttribute("class","fshape");return s;
+}
+function textEl(parent,x,y,txt,size){const lines=String(txt).split("\n"),t=el("text",{x,y,"text-anchor":"middle","font-family":"Trebuchet MS,sans-serif","font-weight":700,"font-size":size||13,fill:"#1B2A49"},parent);
+  lines.forEach((l,i)=>{const s=el("tspan",{x,dy:i===0?(-(lines.length-1)*8+5):16},t);s.textContent=l});return t}
+function drawFlow(g,spec,marker,opts={}){
+  g.innerHTML="";const F={nodes:{},edges:[],spec};
+  spec.edges.forEach(e=>{
+    const d="M"+e.pts.map(p=>p.join(" ")).join(" L");
+    const p=el("path",{d,fill:"none",stroke:"#1B2A49","stroke-width":2.5,"marker-end":`url(#${marker})`,class:"fshape"},g);
+    F.edges.push({...e,path:p});
+    if(e.label){const[lx,ly]=e.lp;const t=el("text",{x:lx,y:ly,"text-anchor":"middle","font-family":"Trebuchet MS,sans-serif","font-weight":700,"font-size":13,fill:e.label==="Yes"?"#11904A":"#C92A3B"},g);t.textContent=e.label}
+  });
+  spec.nodes.forEach(n=>{
+    const ng=el("g",{},g);const empty=opts.empty&&opts.empty.includes(n.id);
+    const s=shapeEl(ng,n,empty?"#fff":FILL[n.type]);if(empty){s.setAttribute("stroke-dasharray","7 5");s.setAttribute("stroke","#8A97B5")}
+    const t=textEl(ng,n.x,n.y,empty?"?":n.text,n.size);if(empty)t.setAttribute("fill","#8A97B5");
+    F.nodes[n.id]={n,g:ng,shape:s,text:t};
+  });
+  F.token=el("circle",{r:8,fill:"#F2A007",stroke:"#1B2A49","stroke-width":2.5,opacity:0},g);
+  return F;
+}
+function setActive(F,id){for(const k in F.nodes){const o=F.nodes[k];const on=k===id;o.shape.setAttribute("fill",on?"#FFE08A":(o.filled===false?"#fff":FILL[o.n.type]));o.shape.setAttribute("stroke",on?"#F2A007":(o.filled===false?"#8A97B5":"#1B2A49"));o.shape.setAttribute("stroke-width",on?4:2.5)}}
+function edgeOn(e,on){e.path.setAttribute("stroke",on?"#F2A007":"#1B2A49");e.path.setAttribute("stroke-width",on?4:2.5)}
+async function moveToken(F,e,ms){const L=e.path.getTotalLength();edgeOn(e,true);F.token.setAttribute("opacity",1);
+  await frames(ms||Math.max(400,L*7),k=>{const p=e.path.getPointAtLength(L*k);F.token.setAttribute("cx",p.x);F.token.setAttribute("cy",p.y)});edgeOn(e,false)}
+
+/* legend */
+const LEG=[["term","Start / End","Where the flowchart begins and finishes"],["proc","Process","An action or step to do"],["io","Input / Output","Data going in or coming out"],["dec","Decision","A Yes/No question with two arrows out"],["arrow","Flow line","Shows the order to follow"]];
+function legendIcon(type){
+  if(type==="arrow")return'<svg viewBox="0 0 84 42"><defs><marker id="lgA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="10" markerHeight="10" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#1B2A49"/></marker></defs><path d="M12 21 H70" stroke="#1B2A49" stroke-width="3" marker-end="url(#lgA)"/></svg>';
+  const w=70,h=30,x=42,y=21;let s;
+  if(type==="term")s=`<rect x="${x-w/2}" y="${y-h/2}" width="${w}" height="${h}" rx="15"`;
+  else if(type==="proc")s=`<rect x="${x-w/2}" y="${y-h/2}" width="${w}" height="${h}" rx="2"`;
+  else if(type==="io")s=`<polygon points="${x-w/2+10},${y-h/2} ${x+w/2},${y-h/2} ${x+w/2-10},${y+h/2} ${x-w/2},${y+h/2}"`;
+  else s=`<polygon points="${x},${y-19} ${x+36},${y} ${x},${y+19} ${x-36},${y}"`;
+  return`<svg viewBox="0 0 84 42">${s} fill="${FILL[type]}" stroke="#1B2A49" stroke-width="2.5"/></svg>`;
+}
+$("#legend").innerHTML=LEG.map(([t,n,d])=>`<div class="lg" data-t="${t}">${legendIcon(t)}<b>${n}</b><span>${d}</span></div>`).join("");
+function legendOn(t){document.querySelectorAll(".lg").forEach(l=>l.classList.toggle("on",l.dataset.t===t))}
+
+/* run control */
+let RUN=0,pending=null,busy=false;
+function choose(){return new Promise(r=>pending=r)}
+function cancelPending(){if(pending){const p=pending;pending=null;p(null)}openGate()}
+let MODE="step",gateRes=null;
+function gate(){if(MODE==="auto"||!gateHost)return Promise.resolve();$("#nextStep").hidden=false;$("#nextStep").focus();return new Promise(r=>gateRes=r)}
+function openGate(){$("#nextStep").hidden=true;if(gateRes){const g=gateRes;gateRes=null;g()}}
+let gateHost=false;
+async function runFlow(F,start,handlers,myRun,useGate){
+  let id=start;gateHost=!!useGate;
+  while(true){
+    if(myRun!==RUN)return false;
+    const node=F.nodes[id].n;setActive(F,id);legendOn(node.type);
+    await handlers.node(id,node);if(myRun!==RUN)return false;
+    const outs=F.edges.filter(e=>e.from===id);if(!outs.length)break;
+    if(useGate){await gate();if(myRun!==RUN)return false}
+    let e=outs[0];
+    if(outs.length>1){legendOn("dec");const ans=await handlers.decide(id);if(myRun!==RUN||!ans)return false;e=outs.find(o=>o.label===ans)}
+    legendOn("arrow");await moveToken(F,e);if(myRun!==RUN)return false;id=e.to;
+  }
+  return true;
+}
+function lockEx(on){busy=on;document.querySelectorAll(".ex").forEach(b=>b.disabled=on)}
+
+document.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{MODE=b.dataset.mode;document.querySelectorAll(".mode").forEach(x=>x.setAttribute("aria-pressed",x===b));if(MODE==="auto")openGate()});
+$("#nextStep").onclick=openGate;
+
+/* ================= EXAMPLE 1: TEA ================= */
+const TEA={nodes:[
+  {id:"s",type:"term",x:150,y:40,w:110,h:34,text:"Start"},
+  {id:"boil",type:"proc",x:150,y:94,w:190,h:36,text:"Boil the kettle"},
+  {id:"bag",type:"proc",x:150,y:148,w:190,h:36,text:"Put a teabag in a cup"},
+  {id:"pour",type:"proc",x:150,y:202,w:190,h:36,text:"Pour in hot water"},
+  {id:"sug",type:"dec",x:150,y:274,w:150,h:76,text:"Do you\nwant sugar?"},
+  {id:"add",type:"proc",x:322,y:274,w:120,h:36,text:"Add sugar"},
+  {id:"stir",type:"proc",x:150,y:346,w:190,h:36,text:"Stir and drink"},
+  {id:"e",type:"term",x:150,y:404,w:110,h:34,text:"End"}],
+ edges:[
+  {from:"s",to:"boil",pts:[[150,57],[150,74]]},{from:"boil",to:"bag",pts:[[150,112],[150,128]]},{from:"bag",to:"pour",pts:[[150,166],[150,182]]},
+  {from:"pour",to:"sug",pts:[[150,220],[150,234]]},
+  {from:"sug",to:"add",pts:[[225,274],[260,274]],label:"Yes",lp:[242,266]},
+  {from:"sug",to:"stir",pts:[[150,312],[150,326]],label:"No",lp:[166,324]},
+  {from:"add",to:"stir",pts:[[322,292],[322,346],[247,346]]},
+  {from:"stir",to:"e",pts:[[150,364],[150,385]]}]};
+let FT;
+function tSay(who,t){$("#tWho").textContent=who;$("#tSay").textContent=t;$("#tBub").setAttribute("opacity",t?1:0)}
+function steam(parent,x,y,n){for(let i=0;i<n;i++){const c=el("circle",{cx:x,cy:y,r:5,fill:"#fff",stroke:"#BCD3EE","stroke-width":1.5,opacity:.9},parent);
+  const dx=(Math.random()-.5)*16;frames(1400+i*200,k=>{c.setAttribute("cy",y-k*50);c.setAttribute("cx",x+dx*k);c.setAttribute("r",5+k*6);c.setAttribute("opacity",(.9*(1-k)).toFixed(2))}).then(()=>c.remove())}}
+function resetTea(){
+  RUN++;cancelPending();FT=drawFlow($("#fTea"),TEA,"mT");setActive(FT,null);legendOn(null);
+  $("#tKettle").setAttribute("transform","translate(560,296)");$("#tLight").setAttribute("fill","#5A6B8C");
+  $("#tTea").setAttribute("height",0);$("#tTea").setAttribute("y",296);$("#tBag").setAttribute("opacity",0);$("#tCubes").innerHTML="";
+  $("#tSpoon").setAttribute("opacity",0);$("#tStream").setAttribute("opacity",0);$("#tSteam").innerHTML="";tSay("","");
+  $("#tMouth").setAttribute("d","M-5 -71 Q0 -67 5 -71");
+  ["yesTea","noTea"].forEach(id=>$("#"+id).hidden=true);$("#goTea").hidden=false;$("#goTea").textContent="Start";$("#goTea").disabled=false;
+  caption("This flowchart is an algorithm for making a cup of tea. Press <b>Start</b> and follow the arrows.");
+}
+const TEA_H={
+  async node(id){
+    if(id==="s"){caption("<b>Start</b>: every flowchart begins with a rounded Start shape.");tSay("Me:","Time for a cup of tea!");await wait(1500)}
+    if(id==="boil"){caption("A <b>rectangle</b> is a process: an action to do. <b>Boil the kettle.</b>");tSay("","");$("#tLight").setAttribute("fill","#FF4B4B");
+      for(let i=0;i<5;i++){steam($("#tSteam"),612,236,1);await frames(260,k=>$("#tKettle").setAttribute("transform",`translate(${560+Math.sin(k*Math.PI*4)*2},296)`))}
+      $("#tLight").setAttribute("fill","#5A6B8C");tSay("Kettle:","Click! Water's boiled.");await wait(900)}
+    if(id==="bag"){caption("Next process: <b>put a teabag in the cup.</b>");tSay("","");const b=$("#tBag");b.setAttribute("opacity",1);
+      await frames(800,k=>b.setAttribute("transform",`translate(665,${190+ease(k)*90})`));await wait(300)}
+    if(id==="pour"){caption("Next process: <b>pour in hot water.</b>");
+      await frames(700,k=>$("#tKettle").setAttribute("transform",`translate(${560+(570-560)*ease(k)},${296-60*ease(k)}) rotate(${-35*ease(k)})`));
+      $("#tStream").setAttribute("opacity",1);
+      await frames(1300,k=>{$("#tTea").setAttribute("height",36*k);$("#tTea").setAttribute("y",296-36*k)});
+      $("#tStream").setAttribute("opacity",0);
+      await frames(600,k=>$("#tKettle").setAttribute("transform",`translate(${570-10*ease(k)},${236+60*ease(k)}) rotate(${-35+35*ease(k)})`));
+      steam($("#tSteam"),665,252,3);await wait(400)}
+    if(id==="add"){caption("<b>Yes</b>, so we follow the Yes arrow: <b>add sugar.</b>","t");const sp=$("#tSpoon");sp.setAttribute("opacity",1);
+      for(let i=0;i<2;i++){const c=el("rect",{x:-4,y:-4,width:8,height:8,fill:"#fff",stroke:"#8A97B5","stroke-width":1},$("#tCubes"));
+        await frames(700,k=>{const x=760+(665-760)*ease(k),y=262-Math.sin(k*Math.PI)*40-(1-k)*0+(k)*-6;sp.setAttribute("transform",`translate(${x},${y})`);c.setAttribute("transform",`translate(${x},${y})`)});
+        await frames(300,k=>c.setAttribute("transform",`translate(665,${256+k*30})`));c.remove()}
+      sp.setAttribute("opacity",0);await wait(200)}
+    if(id==="stir"){caption("Process: <b>stir and drink.</b>");const sp=$("#tSpoon");sp.setAttribute("opacity",1);
+      await frames(1400,k=>sp.setAttribute("transform",`translate(${665+Math.sin(k*Math.PI*6)*10},270) rotate(${Math.sin(k*Math.PI*6)*12})`));
+      sp.setAttribute("opacity",0);steam($("#tSteam"),665,252,3);$("#tMouth").setAttribute("d","M-6 -72 Q0 -64 6 -72");tSay("Me:","Mmm, lovely!");await wait(1100)}
+    if(id==="e"){caption("<b>End.</b> Each step happened in order, and the <b>decision</b> chose which arrow to follow.","t")}
+  },
+  async decide(){
+    caption("A <b>diamond</b> is a decision: a Yes/No question. Which arrow do we follow? <b>Do you want sugar?</b>");tSay("Me:","Hmm... do I want sugar?");
+    $("#goTea").hidden=true;["yesTea","noTea"].forEach(id=>$("#"+id).hidden=false);
+    const a=await choose();["yesTea","noTea"].forEach(id=>$("#"+id).hidden=true);$("#goTea").hidden=false;
+    if(a==="No")caption("<b>No</b>, so we follow the No arrow and skip adding sugar.","f");
+    tSay("Me:",a==="Yes"?"Yes please, two sugars!":a?"No sugar for me, thanks.":"");await wait(900);return a}
+};
+$("#yesTea").onclick=()=>{if(pending){const p=pending;pending=null;p("Yes")}};
+$("#noTea").onclick=()=>{if(pending){const p=pending;pending=null;p("No")}};
+$("#goTea").onclick=async()=>{
+  if($("#goTea").textContent==="Make another"){resetTea();return}
+  const my=++RUN;lockEx(true);$("#goTea").disabled=true;
+  const ok=await runFlow(FT,"s",TEA_H,my,true);
+  if(my===RUN){lockEx(false);$("#goTea").disabled=false;if(ok)$("#goTea").textContent="Make another"}
+};
+
+/* ================= EXAMPLE 2: CROSS THE ROAD ================= */
+const ROAD={nodes:[
+  {id:"s",type:"term",x:150,y:40,w:110,h:34,text:"Start"},
+  {id:"walk",type:"proc",x:150,y:96,w:200,h:36,text:"Walk to the crossing"},
+  {id:"press",type:"proc",x:150,y:152,w:200,h:36,text:"Press the button"},
+  {id:"green",type:"dec",x:150,y:236,w:176,h:84,text:"Is the green\nman showing?"},
+  {id:"wait",type:"proc",x:330,y:236,w:110,h:36,text:"Wait"},
+  {id:"cross",type:"proc",x:150,y:330,w:200,h:36,text:"Cross the road"},
+  {id:"e",type:"term",x:150,y:396,w:110,h:34,text:"End"}],
+ edges:[
+  {from:"s",to:"walk",pts:[[150,57],[150,76]]},{from:"walk",to:"press",pts:[[150,114],[150,132]]},
+  {from:"press",to:"green",pts:[[150,170],[150,192]]},
+  {from:"green",to:"wait",pts:[[238,236],[273,236]],label:"No",lp:[254,228]},
+  {from:"wait",to:"green",pts:[[330,218],[330,182],[158,182]]},
+  {from:"green",to:"cross",pts:[[150,278],[150,310]],label:"Yes",lp:[168,300]},
+  {from:"cross",to:"e",pts:[[150,348],[150,377]]}]};
+let FR,walker,waitsLeft=2,roadRound=0,waited=0;
+function rSay(who,t){$("#rWho").textContent=who;$("#rSay").textContent=t;$("#rBub").setAttribute("opacity",t?1:0)}
+function makeWalker(){const g=el("g",{},$("#walker")),i=el("g",{},g);
+  const l1=el("line",{x1:-6,y1:-12,x2:-8,y2:0,stroke:"#1B2A49","stroke-width":5,"stroke-linecap":"round"},i);const l2=el("line",{x1:6,y1:-12,x2:8,y2:0,stroke:"#1B2A49","stroke-width":5,"stroke-linecap":"round"},i);
+  el("rect",{x:-14,y:-46,width:28,height:36,rx:9,fill:"#1C6FD1",stroke:"#1B2A49","stroke-width":2.5},i);
+  el("circle",{cx:0,cy:-58,r:12,fill:"#8D5A3B",stroke:"#1B2A49","stroke-width":2.5},i);el("path",{d:"M-12 -62 Q0 -76 12 -62",fill:"#1B2A49"},i);
+  return{g,i,l1,l2,x:0,y:0,s:1}}
+function placeW(p,x,y,ph,s){p.x=x;p.y=y;if(s)p.s=s;p.g.setAttribute("transform",`translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${p.s.toFixed(2)})`);const sw=Math.sin(ph||0)*7;p.l1.setAttribute("x2",-8+sw);p.l2.setAttribute("x2",8-sw)}
+async function walkW(p,x,y,speed=110,s2){const sx=p.x,sy=p.y,ss=p.s,d=Math.hypot(x-sx,y-sy);await frames(Math.max(250,d/speed*1000),k=>placeW(p,sx+(x-sx)*k,sy+(y-sy)*k,k*d/9,s2?ss+(s2-ss)*k:null));placeW(p,x,y,0)}
+async function drive(){const colors=["#C92A3B","#F2A007","#11904A","#6C4AB6"],c=el("g",{},$("#cars")),col=colors[Math.floor(Math.random()*4)];
+  el("rect",{x:-40,y:-22,width:80,height:24,rx:6,fill:col,stroke:"#1B2A49","stroke-width":2.5},c);el("path",{d:"M-24 -22 L-14 -38 H16 L26 -22Z",fill:col,stroke:"#1B2A49","stroke-width":2.5},c);
+  el("path",{d:"M-10 -36 H12 L19 -24 H-17Z",fill:"#BFE3FF"},c);el("circle",{cx:-24,cy:4,r:8,fill:"#1B2A49"},c);el("circle",{cx:24,cy:4,r:8,fill:"#1B2A49"},c);
+  await frames(1600,k=>c.setAttribute("transform",`translate(${370+k*500},366)`));c.remove()}
+function setMan(green){$("#greenMan").setAttribute("opacity",green?1:0);$("#redMan").setAttribute("opacity",green?0:1);
+  $("#carR").setAttribute("fill",green?"#FF4B4B":"#4A2228");$("#carA").setAttribute("fill","#4A3B1E");$("#carG").setAttribute("fill",green?"#1F3A2B":"#2BD46B")}
+async function carsStop(){$("#carG").setAttribute("fill","#1F3A2B");$("#carA").setAttribute("fill","#F2A007");await wait(700);$("#carA").setAttribute("fill","#4A3B1E")}
+function resetRoad(){
+  RUN++;cancelPending();FR=drawFlow($("#fRoad"),ROAD,"mR");setActive(FR,null);legendOn(null);
+  waitsLeft=roadRound===0?2:Math.floor(Math.random()*4);waited=0;setMan(false);$("#cars").innerHTML="";$("#walker").innerHTML="";
+  walker=makeWalker();placeW(walker,440,428,0,1);rSay("","");$("#waitLight").textContent="PUSH";$("#waitLight").setAttribute("fill","#1B2A49");
+  $("#goRoad").textContent="Start";$("#goRoad").disabled=false;
+  caption("This flowchart has a <b>loop</b>: an arrow that goes back to an earlier step. Press <b>Start</b>.");
+}
+const ROAD_H={
+  async node(id){
+    if(id==="s"){caption("<b>Start.</b>");rSay("Me:","I need to get to the other side.");await wait(1300)}
+    if(id==="walk"){caption("Process: <b>walk to the crossing.</b>");rSay("","");await walkW(walker,572,428)}
+    if(id==="press"){caption("Process: <b>press the button.</b>");await frames(400,k=>{});$("#waitLight").textContent="WAIT";$("#waitLight").setAttribute("fill","#C92A3B");rSay("Me:","Beep! Now I wait for the green man.");await wait(1100)}
+    if(id==="wait"){waited++;caption(`<b>No</b>, so follow the No arrow: <b>wait</b>. (Wait number ${waited})`,"f");rSay("Me:",waited===1?"Still red. I'll wait...":"Still waiting...");await drive();await wait(300);
+      if(waitsLeft>0)waitsLeft--;}
+    if(id==="cross"){caption("<b>Yes</b>, so follow the Yes arrow: <b>cross the road.</b>","t");rSay("Me:","Green man! The cars have stopped. Safe to cross.");$("#waitLight").textContent="PUSH";$("#waitLight").setAttribute("fill","#1B2A49");
+      await walkW(walker,640,428,140);await walkW(walker,640,280,100,.8);await walkW(walker,720,280,120);setMan(false)}
+    if(id==="e"){caption(`<b>End.</b> The flowchart looped back <b>${waited}</b> time${waited===1?"":"s"}, checking the same question until the answer was Yes.`,"t");rSay("Me:","Made it!")}
+  },
+  async decide(){
+    if(waitsLeft===0){await carsStop();setMan(true)}
+    caption(`Decision: <b>is the green man showing?</b> ${waitsLeft===0?"Yes!":"No, it's still red."}`,waitsLeft===0?"t":"f");
+    await wait(1600);return waitsLeft===0?"Yes":"No"}
+};
+$("#goRoad").onclick=async()=>{
+  if($("#goRoad").textContent==="Cross again"){roadRound++;resetRoad();return}
+  const my=++RUN;lockEx(true);$("#goRoad").disabled=true;
+  const ok=await runFlow(FR,"s",ROAD_H,my,true);
+  if(my===RUN){lockEx(false);$("#goRoad").disabled=false;if(ok)$("#goRoad").textContent="Cross again"}
+};
+
+/* ================= EXAMPLE 3: LOG IN ================= */
+const LOGIN={nodes:[
+  {id:"s",type:"term",x:150,y:40,w:110,h:34,text:"Start"},
+  {id:"in",type:"io",x:150,y:112,w:200,h:46,text:"Input the\npassword"},
+  {id:"ok",type:"dec",x:150,y:210,w:190,h:90,text:"Is the\npassword correct?"},
+  {id:"bad",type:"io",x:330,y:210,w:130,h:50,text:"Output\n\"Try again\"",size:12},
+  {id:"yes",type:"io",x:150,y:310,w:200,h:46,text:"Output\n\"Welcome!\""},
+  {id:"e",type:"term",x:150,y:394,w:110,h:34,text:"End"}],
+ edges:[
+  {from:"s",to:"in",pts:[[150,57],[150,87]]},
+  {from:"in",to:"ok",pts:[[150,135],[150,163]]},
+  {from:"ok",to:"bad",pts:[[245,210],[263,210]],label:"No",lp:[254,201]},
+  {from:"bad",to:"in",pts:[[330,185],[330,112],[252,112]]},
+  {from:"ok",to:"yes",pts:[[150,255],[150,285]],label:"Yes",lp:[168,276]},
+  {from:"yes",to:"e",pts:[[150,333],[150,375]]}]};
+let FL,typed="",lTries=0;
+function resetLogin(){
+  RUN++;cancelPending();FL=drawFlow($("#fLogin"),LOGIN,"mL");setActive(FL,null);legendOn(null);
+  typed="";lTries=0;$("#lPw").textContent="";$("#lMsg").textContent="";$("#lMsg").setAttribute("fill","#1B2A49");$("#lTries").textContent="Attempts: 0";$("#lScreen").setAttribute("fill","#F4F8FD");
+  $("#goLogin").hidden=false;$("#goLogin").textContent="Start";$("#goLogin").disabled=false;$("#pwIn").hidden=true;$("#enterLogin").hidden=true;$("#pwIn").value="";
+  caption("A <b>parallelogram</b> is for <b>input</b> (data going in) or <b>output</b> (data coming out). Press <b>Start</b>.");
+}
+const LOGIN_H={
+  async node(id){
+    if(id==="s"){caption("<b>Start.</b>");await wait(900)}
+    if(id==="in"){caption("<b>Input:</b> type a password below and press Enter. Try a wrong one first!");$("#pwIn").hidden=false;$("#enterLogin").hidden=false;$("#goLogin").hidden=true;$("#pwIn").value="";$("#pwIn").focus();
+      const v=await choose();$("#pwIn").hidden=true;$("#enterLogin").hidden=true;$("#goLogin").hidden=false;if(v===null)return;
+      typed=v;lTries++;$("#lPw").textContent="•".repeat(Math.min(16,v.length));$("#lTries").textContent=`Attempts: ${lTries}`;$("#lMsg").textContent="";$("#lScreen").setAttribute("fill","#F4F8FD");await wait(500)}
+    if(id==="bad"){caption("<b>No</b>, so the <b>output</b> is \"Try again\", then the arrow loops back to the input.","f");$("#lMsg").textContent="Wrong password. Try again.";$("#lMsg").setAttribute("fill","#C92A3B");$("#lScreen").setAttribute("fill","#FDE2E5");await wait(1600)}
+    if(id==="yes"){caption("<b>Yes</b>, so the <b>output</b> is \"Welcome!\"","t");$("#lMsg").textContent="Welcome!";$("#lMsg").setAttribute("fill","#11904A");$("#lScreen").setAttribute("fill","#DCF4E5");await wait(1400)}
+    if(id==="e"){caption(`<b>End.</b> It took <b>${lTries}</b> attempt${lTries===1?"":"s"}. The flowchart kept looping back to the input until the decision was Yes.`,"t")}
+  },
+  async decide(){const ok=typed==="dragon42";caption(`Decision: <b>is the password correct?</b> ${ok?"Yes!":"No."}`,ok?"t":"f");await wait(1400);return ok?"Yes":"No"}
+};
+function submitPw(){if(pending){const p=pending;pending=null;p($("#pwIn").value)}}
+$("#enterLogin").onclick=submitPw;$("#pwIn").addEventListener("keydown",e=>{if(e.key==="Enter")submitPw()});
+$("#goLogin").onclick=async()=>{
+  if($("#goLogin").textContent==="Try again"){resetLogin();return}
+  const my=++RUN;lockEx(true);$("#goLogin").disabled=true;
+  const ok=await runFlow(FL,"s",LOGIN_H,my,true);
+  if(my===RUN){lockEx(false);$("#goLogin").disabled=false;if(ok)$("#goLogin").textContent="Try again"}
+};
+
+/* switching examples */
+const EX={tea:{svg:"sTea",ctl:"cTea",title:"Make a cup of tea",reset:resetTea},road:{svg:"sRoad",ctl:"cRoad",title:"Cross the road",reset:resetRoad},login:{svg:"sLogin",ctl:"cLogin",title:"Log in with a password",reset:resetLogin}};
+function setEx(x){if(busy)return;document.querySelectorAll(".ex").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ex===x));
+  for(const k in EX){$("#"+EX[k].svg).toggleAttribute("hidden",k!==x);$("#"+EX[k].ctl).hidden=k!==x}
+  $("#wTitle").textContent=EX[x].title;EX[x].reset()}
+document.querySelectorAll(".ex").forEach(b=>b.onclick=()=>setEx(b.dataset.ex));
+resetTea();
+
+/* ================= BUILD IT ================= */
+const BUILDS=[
+  {title:"Brush your teeth",nodes:[
+    {id:"s",type:"term",x:200,y:36,w:110,h:32,text:"Start"},
+    {id:"a",type:"proc",x:200,y:94,w:230,h:38,text:"Put toothpaste on the brush"},
+    {id:"b",type:"proc",x:200,y:156,w:230,h:38,text:"Brush your teeth"},
+    {id:"c",type:"dec",x:200,y:240,w:180,h:84,text:"Are your teeth\nclean?"},
+    {id:"d",type:"proc",x:200,y:330,w:230,h:38,text:"Rinse your mouth"},
+    {id:"e",type:"term",x:200,y:398,w:110,h:32,text:"End"}],
+   edges:[{from:"s",to:"a",pts:[[200,52],[200,73]]},{from:"a",to:"b",pts:[[200,113],[200,135]]},{from:"b",to:"c",pts:[[200,175],[200,196]]},
+    {from:"c",to:"b",pts:[[290,240],[350,240],[350,156],[317,156]],label:"No",lp:[318,232]},
+    {from:"c",to:"d",pts:[[200,282],[200,309]],label:"Yes",lp:[218,300]},{from:"d",to:"e",pts:[[200,349],[200,380]]}],
+   slots:["a","b","c","d"],run:{c:["No","Yes"]}},
+  {title:"Going outside",nodes:[
+    {id:"s",type:"term",x:170,y:36,w:110,h:32,text:"Start"},
+    {id:"a",type:"proc",x:170,y:94,w:200,h:38,text:"Put your coat on"},
+    {id:"b",type:"dec",x:170,y:178,w:170,h:84,text:"Is it\nraining?"},
+    {id:"c",type:"proc",x:335,y:178,w:140,h:38,text:"Take an umbrella"},
+    {id:"d",type:"proc",x:170,y:276,w:200,h:38,text:"Go outside"},
+    {id:"e",type:"term",x:170,y:350,w:110,h:32,text:"End"}],
+   edges:[{from:"s",to:"a",pts:[[170,52],[170,73]]},{from:"a",to:"b",pts:[[170,113],[170,134]]},
+    {from:"b",to:"c",pts:[[255,178],[263,178]],label:"Yes",lp:[256,168]},{from:"b",to:"d",pts:[[170,220],[170,255]],label:"No",lp:[186,244]},
+    {from:"c",to:"d",pts:[[335,197],[335,276],[272,276]]},{from:"d",to:"e",pts:[[170,295],[170,332]]}],
+   slots:["a","b","c","d"],run:{b:["Yes"]}},
+  {title:"Guess the number",nodes:[
+    {id:"s",type:"term",x:170,y:36,w:110,h:32,text:"Start"},
+    {id:"a",type:"io",x:170,y:104,w:200,h:46,text:"Input a guess"},
+    {id:"b",type:"dec",x:170,y:200,w:180,h:88,text:"Is the guess\ncorrect?"},
+    {id:"c",type:"io",x:340,y:200,w:130,h:50,text:"Output\n\"Try again\"",size:12},
+    {id:"d",type:"io",x:170,y:300,w:200,h:46,text:"Output\n\"You win!\""},
+    {id:"e",type:"term",x:170,y:380,w:110,h:32,text:"End"}],
+   edges:[{from:"s",to:"a",pts:[[170,52],[170,79]]},{from:"a",to:"b",pts:[[170,127],[170,154]]},
+    {from:"b",to:"c",pts:[[260,200],[273,200]],label:"No",lp:[266,190]},{from:"c",to:"a",pts:[[340,175],[340,104],[272,104]]},
+    {from:"b",to:"d",pts:[[170,244],[170,275]],label:"Yes",lp:[188,266]},{from:"d",to:"e",pts:[[170,323],[170,362]]}],
+   slots:["a","b","c","d"],run:{b:["No","No","Yes"]}},
+];
+let bi=0,BF,bPicked=null,bPlaced={},bTried={},bFirst=0;
+const TYPE_HINT={proc:"is an action to do, so it goes in a <b>rectangle</b> (process)",dec:"is a Yes/No question, so it goes in a <b>diamond</b> (decision)",io:"is data going in or coming out, so it goes in a <b>parallelogram</b> (input/output)"};
+function bFb(html,c){const f=$("#bFb");f.innerHTML=html;f.className="bfb "+c}
+function loadBuild(i){
+  bi=i;const B=BUILDS[i];bPicked=null;bPlaced={};bTried={};bFirst=0;
+  $("#bChips").innerHTML=BUILDS.map((b,k)=>`<button class="chip" data-b="${k}" aria-pressed="${k===i}">${k+1}. ${esc(b.title)}</button>`).join("");
+  document.querySelectorAll("[data-b]").forEach(b=>b.onclick=()=>loadBuild(+b.dataset.b));
+  BF=drawFlow($("#fBuild"),B,"mB",{empty:B.slots});
+  B.slots.forEach(id=>{const o=BF.nodes[id];o.filled=false;o.g.classList.add("slot");o.g.onclick=()=>dropOn(id)});
+  $("#bCards").innerHTML=shuffle(B.slots).map(id=>{const n=B.nodes.find(x=>x.id===id);return`<button class="task" data-id="${id}" aria-pressed="false">${esc(n.text.replace(/\n/g," "))}</button>`}).join("");
+  document.querySelectorAll(".task").forEach(t=>t.onclick=()=>{document.querySelectorAll(".task").forEach(x=>x.setAttribute("aria-pressed",x===t));bPicked=t.dataset.id;
+    bFb(`Where does <b>${esc(t.textContent)}</b> go? Click a dashed shape.`,"n")});
+  $("#bRun").hidden=true;
+  bFb(`<b>${esc(B.title)}</b>: the steps are missing! Click a step, then click the shape it belongs in.`,"n");
+}
+function dropOn(slot){
+  const B=BUILDS[bi];if(bPlaced[slot])return;
+  if(!bPicked){bFb("First click one of the steps on the right.","n");return}
+  const card=B.nodes.find(n=>n.id===bPicked),target=B.nodes.find(n=>n.id===slot),label=card.text.replace(/\n/g," ");
+  if(bPicked!==slot){bTried[bPicked]=true;
+    const o=BF.nodes[slot];o.shape.setAttribute("fill","#FDE2E5");setTimeout(()=>{if(!bPlaced[slot])o.shape.setAttribute("fill","#fff")},700);
+    bFb(card.type!==target.type?`<b>Not quite.</b> "${esc(label)}" ${TYPE_HINT[card.type]}. Look for that shape.`:`<b>Right shape, wrong place!</b> Follow the arrows from Start: what needs to happen at that point?`,"f");return}
+  if(!bTried[bPicked])bFirst++;
+  const o=BF.nodes[slot];o.filled=true;bPlaced[slot]=true;
+  o.shape.setAttribute("fill",FILL[target.type]);o.shape.setAttribute("stroke","#1B2A49");o.shape.removeAttribute("stroke-dasharray");
+  o.text.remove();o.text=textEl(o.g,target.x,target.y,target.text,target.size);
+  document.querySelector(`.task[data-id="${bPicked}"]`).remove();bPicked=null;
+  if(Object.keys(bPlaced).length===B.slots.length){
+    bFb(`<b>Flowchart complete!</b> You got ${bFirst} of ${B.slots.length} right first time. Press <b>Run it!</b> to follow the arrows.`,"t");$("#bRun").hidden=false;
+  }else bFb(`<b>Yes!</b> "${esc(label)}" ${TYPE_HINT[target.type].split(", so")[0]}, and it's in the right place.`,"t");
+}
+$("#bRun").onclick=async()=>{
+  const B=BUILDS[bi],answers={};for(const k in B.run)answers[k]=B.run[k].slice();
+  $("#bRun").disabled=true;const my=++RUN;
+  await runFlow(BF,"s",{async node(id){const n=BF.nodes[id].n;bFb(`<b>${TYPE_NAME[n.type]}:</b> ${esc(n.text.replace(/\n/g," "))}`,"n");await wait(900)},
+    async decide(id){const a=answers[id].length>1?answers[id].shift():answers[id][0];bFb(`<b>Decision:</b> ${esc(BF.nodes[id].n.text.replace(/\n/g," "))} <b>${a}</b>, so follow the ${a} arrow.`,a==="Yes"?"t":"f");await wait(1300);return a}},my);
+  setActive(BF,null);BF.token.setAttribute("opacity",0);
+  bFb(`<b>Done!</b> Your flowchart works. ${bi<BUILDS.length-1?"Try the next one.":"You've finished them all!"}`,"t");$("#bRun").disabled=false;
+};
+$("#bReset").onclick=()=>loadBuild(bi);
+loadBuild(0);
+
+/* ================= QUIZ ================= */
+function icon(type){return legendIcon(type).replace('<svg viewBox="0 0 84 42">','<svg viewBox="0 0 84 42" aria-hidden="true">')}
+const Q=[
+  {q:"Which symbol shows a decision?",shapes:["term","proc","dec","io"],a:2,why:"A decision is a diamond. It asks a Yes/No question and has two arrows coming out.",
+   h:["That's a terminator: it shows Start or End.","That's a process: an action to do.",null,"That's input/output: data going in or out."]},
+  {q:"Which symbol shows Start or End?",shapes:["proc","term","io","dec"],a:1,why:"Start and End use a rounded shape called a terminator.",
+   h:["That's a process: an action to do. Look for a rounded shape.",null,"That's input/output. Look for a rounded shape.","That's a decision. Look for a rounded shape."]},
+  {q:"What does a parallelogram show?",o:["Input or output","A decision","Start or end","An action to do"],a:0,why:"Parallelograms show data going in (input) or coming out (output), like typing a password or showing \"Welcome!\".",
+   h:[null,"Decisions are diamonds. Think about the login example: which shape was \"Input the password\"?","Start and End are rounded. Think about the login example: which shape was \"Input the password\"?","Actions go in rectangles. Think about the login example: which shape was \"Input the password\"?"]},
+  {q:"What do the arrows (flow lines) in a flowchart show?",o:["The order to follow the steps","How important each step is","How long each step takes","Which steps are optional"],a:0,why:"Arrows show the order: you follow them from one shape to the next.",
+   h:[null,"Arrows don't show importance. Remember the dot moving along them in the Watch examples.","Arrows don't show time. Remember the dot moving along them in the Watch examples.","Arrows don't show that. Remember the dot moving along them in the Watch examples."]},
+  {q:"How many arrows come OUT of a decision symbol?",o:["One","Two: Yes and No","Three","None"],a:1,why:"A decision has two ways out, one for Yes and one for No.",
+   h:["A decision has to go two different ways depending on the answer.",null,"A Yes/No question only has two possible answers.","Every symbol except End has an arrow out."]},
+  {q:"Which of these belongs in a decision (diamond)?",o:["Is it raining?","Boil the kettle","Start","Input your name"],a:0,why:"A decision is a question with a Yes or No answer.",
+   h:[null,"That's an action, so it's a process (rectangle). Look for a Yes/No question.","That's a terminator (rounded shape). Look for a Yes/No question.","That's input (parallelogram). Look for a Yes/No question."]},
+  {q:"Which of these belongs in a parallelogram?",o:["Input the password","Add sugar","Is the password correct?","End"],a:0,why:"Typing in a password is data going into the program: input.",
+   h:[null,"That's an action, so it's a process (rectangle). Which one is data going in or out?","That's a Yes/No question, so it's a decision (diamond). Which one is data going in or out?","That's a terminator. Which one is data going in or out?"]},
+  {q:"Look at the tea flowchart. You answer No to \"Do you want sugar?\". What happens next?",flow:"TEA",o:["Stir and drink","Add sugar","Boil the kettle","The flowchart stops"],a:0,why:"The No arrow skips \"Add sugar\" and goes straight to \"Stir and drink\".",
+   h:[null,"That's where the Yes arrow goes. Follow the No arrow instead.","That already happened at the start. Follow the No arrow from the decision.","It doesn't stop. Follow the No arrow from the decision."]},
+  {q:"Look at the crossing flowchart. What happens when the green man is NOT showing?",flow:"ROAD",o:["Wait, then check again","Cross the road anyway","Go home","Press the button again forever"],a:0,why:"The No arrow goes to Wait, then loops back to ask the question again.",
+   h:[null,"Definitely not! Follow the No arrow from the decision.","That's not in the flowchart. Follow the No arrow from the decision.","Look again: after pressing the button once, the No arrow goes to Wait and loops back."]},
+  {q:"Look at the log in flowchart. Someone types the wrong password. What is the output?",flow:"LOGIN",o:["\"Try again\"","\"Welcome!\"","Nothing, it ends","It asks if they want sugar"],a:0,why:"The No arrow from the decision goes to the output \"Try again\", then loops back to the input.",
+   h:[null,"That's the output for the Yes arrow. Follow the No arrow instead.","It doesn't end. Follow the No arrow from the decision.","That's a different flowchart! Follow the No arrow from the decision."]},
+];
+let qi=0,score=0,tries=0;
+function show(){
+  const b=$("#quizBody");
+  if(qi>=Q.length){
+    b.innerHTML=`<div class="end"><p style="margin:0">Right first time</p><p class="big">${score}/${Q.length}</p><p>${score===Q.length?"Perfect! You're a flowchart expert.":score>=7?"Great work! You got every question in the end.":"You got there in the end! Watch the examples again and see if you can beat your score."}</p><button class="btn" id="again">Try again</button></div>`;
+    $("#again").onclick=()=>{qi=0;score=0;show()};return;
+  }
+  const x=Q[qi];tries=0;const opts=x.shapes||x.o;
+  b.innerHTML=`<div class="progress"><i style="width:${qi/Q.length*100}%"></i></div>
+    <p style="margin:0;color:var(--muted)">Question ${qi+1} of ${Q.length}</p>
+    <p class="q">${esc(x.q)}</p>
+    ${x.flow?'<div class="qflow"><svg viewBox="0 0 410 440" role="img" aria-label="The flowchart for this question"><defs><marker id="mQ" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#1B2A49"/></marker></defs><rect width="410" height="440" fill="#fff"/><g id="qFlowG"></g></svg></div>':""}
+    <div class="opts${x.shapes?" shapes":""}">${opts.map((o,k)=>`<button class="opt" data-k="${k}" aria-label="${x.shapes?TYPE_NAME[o]+" shape":esc(o)}">${x.shapes?icon(o):esc(o)}</button>`).join("")}</div>
+    <div class="fb" id="fb" aria-live="polite"></div>`;
+  if(x.flow){const F=drawFlow($("#qFlowG"),{TEA,ROAD,LOGIN}[x.flow],"mQ");F.token.remove()}
+  b.querySelectorAll(".opt").forEach(o=>o.onclick=()=>answer(+o.dataset.k,o));
+}
+function answer(k,btnEl){
+  const x=Q[qi],fb=$("#fb");
+  if(k!==x.a){tries++;btnEl.classList.add("f");btnEl.disabled=true;fb.className="fb f";
+    fb.innerHTML=`<b>${tries===1?"Not quite.":"Still not it, but keep going!"}</b> ${esc(x.h[k])} <b>Have another go.</b>`;return}
+  if(tries===0)score++;
+  document.querySelectorAll(".opt").forEach(o=>o.disabled=true);btnEl.classList.add("t");fb.className="fb t";
+  fb.innerHTML=`<b>${tries===0?"Correct, first time!":"Yes, you got it!"}</b> ${esc(x.why)}<div style="margin-top:.6rem"><button class="btn" id="next">${qi===Q.length-1?"See my score":"Next question"}</button></div>`;
+  $("#next").onclick=()=>{qi++;show()};$("#next").focus();
+}
+show();
+document.getElementById("jsWarn").remove();
+</script>
+</body>
+</html>
